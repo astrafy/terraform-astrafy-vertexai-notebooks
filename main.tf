@@ -7,22 +7,23 @@ locals {
 
 # TODO: maybe we should have the account_id as a variable?
 resource "google_service_account" "vertex_notebook_sa" {
+  for_each    = var.notebook_name_to_email_map
   project     = var.project_id
-  account_id  = format(local.sa_account_id_format_spec, var.nb_group_name, "vxnb", "default")
+  account_id  = format(local.sa_account_id_format_spec, each.value, "vxnb", "default")
   description = "SA used by the user-managed notebook (should not contain any permissions)"
 }
 
 # Google cloud storage
 locals {
-  gcs_name_format_spec = "${var.project_id}-common-%s-%s"
+  gcs_name_format_spec = "${var.project_id}-%s"
 }
 
 resource "google_storage_bucket" "vertex_nb_scripts" {
-  name                        = format(local.gcs_name_format_spec, var.nb_group_name, "notebook-scripts")
+  name                        = format(local.gcs_name_format_spec, "notebook-scripts")
   location                    = var.default_region
   uniform_bucket_level_access = true
   force_destroy               = false
-  labels = local.resource_labels
+  labels                      = local.resource_labels
 }
 
 resource "google_storage_bucket_object" "nb_startup_script" {
@@ -30,10 +31,7 @@ resource "google_storage_bucket_object" "nb_startup_script" {
   bucket       = google_storage_bucket.vertex_nb_scripts.name
   content_type = "text/plain; charset=utf-8"
   content = templatefile("${path.module}/nb_scripts/startup_script.sh", {
-    proxy             = var.proxy,
-    no_proxy          = var.no_proxy,
     nb_scripts_bucket = google_storage_bucket.vertex_nb_scripts.name,
-    cert_file         = var.bootstrap_cert_file
   })
 }
 
@@ -55,22 +53,11 @@ resource "google_storage_bucket_object" "nb_autoshutdown_service_script" {
   source       = "${path.module}/nb_scripts/autoshutdown.service"
 }
 
-data "google_storage_bucket_object_content" "zscaler-certificate-source" {
-  name   = var.bootstrap_cert_file
-  bucket = var.bootstrap_bucket
-}
-
-resource "google_storage_bucket_object" "zscaler-certificate-target" {
-  name         = var.bootstrap_cert_file
-  bucket       = google_storage_bucket.vertex_nb_scripts.name
-  content_type = "text/plain; charset=utf-8"
-  content      = data.google_storage_bucket_object_content.zscaler-certificate-source.content
-}
-
 resource "google_storage_bucket_iam_member" "vertex_nb_scripts_viewer" {
-  bucket = google_storage_bucket.vertex_nb_scripts.name
-  role   = "roles/storage.objectViewer"
-  member = "serviceAccount:${google_service_account.vertex_notebook_sa.email}"
+  for_each = google_service_account.vertex_notebook_sa
+  bucket   = google_storage_bucket.vertex_nb_scripts.name
+  role     = "roles/storage.objectViewer"
+  member   = each.value.member
 }
 
 # User-Managed Notebook
@@ -88,7 +75,7 @@ resource "google_notebooks_instance" "notebook_instance" {
   }
 
   # Should we use the notebook_name prefix?
-  name         = format(local.notebook_name, var.nb_group_name, each.key)
+  name         = format(local.notebook_name, each.value, each.key)
   location     = var.notebook_location
   machine_type = var.notebook_machine_type
   vm_image {
@@ -96,7 +83,7 @@ resource "google_notebooks_instance" "notebook_instance" {
     image_family = var.notebook_vm_image_family
   }
   instance_owners = [each.value]
-  service_account = google_service_account.vertex_notebook_sa.email
+  service_account = google_service_account.vertex_notebook_sa[each.key].email
   boot_disk_type  = var.notebook_boot_disk_type
   data_disk_type  = var.notebook_data_disk_type
   no_public_ip    = true
@@ -136,8 +123,8 @@ resource "google_notebooks_instance" "notebook_instance" {
 
 # Necessary for using a user managed notebook
 resource "google_service_account_iam_member" "sa_user_to_user_managed_notebook" {
-  for_each           = var.access_group_email_set
-  service_account_id = google_service_account.vertex_notebook_sa.name
+  for_each           = var.notebook_name_to_email_map
+  service_account_id = google_service_account.vertex_notebook_sa[each.key].name
   role               = "roles/iam.serviceAccountUser"
-  member             = "group:${each.value}"
+  member             = "user:${each.value}"
 }

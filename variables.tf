@@ -11,25 +11,20 @@ variable "default_region" {
 variable "usecase_name" {
   type        = string
   description = "Name of the use case (used for labels)"
-  default = "dev"
+  default     = "dev"
 }
 
 # User-Managed Notebook
-variable "nb_group_name" {
-  type        = string
-  description = "Distinct group name for the group of Vertex AI notebooks."
-}
 
 variable "notebook_name_to_email_map" {
-  type        = map(string)
+  type        = set(string)
   description = <<EOF
-    Mapping with the reference of the notebook suffix as keys, and their respective owner emails as values.
+    set with the reference of the owner emails.
     All notebook names will be prefixed with the local variable notebook_name.
     Example:
-      {
-        "dp": "somebody@email.com"
-      }
-    Will produce a notebook named `vert-<nb-group-name>-dp`.
+      [
+        "name@astrafy.io"
+      ]
   EOF
 }
 
@@ -78,27 +73,6 @@ variable "notebook_subnet" {
   description = "Vertex AI Notebook subnet."
 }
 
-# Proxy
-variable "proxy" {
-  type        = string
-  description = "Proxy string value to assign the HTTP_PROXY and HTTPS_PROXY environmental variables."
-}
-
-variable "no_proxy" {
-  type        = string
-  description = "No proxy string value to assign the NO_PROXY environmental variable."
-}
-
-variable "bootstrap_bucket" {
-  type        = string
-  description = "Bootstrap bucket name."
-}
-
-variable "bootstrap_cert_file" {
-  type        = string
-  description = "Bootstrap Zscaler certificate file."
-}
-
 variable "autoshutdown_counter_threshold" {
   type        = number
   default     = 360
@@ -113,11 +87,6 @@ variable "autoshutdown_sleep_seconds" {
   type        = number
   default     = 10
   description = "Time interval between autoshutdown inactivity checks."
-}
-
-variable "access_group_email_set" {
-  type        = set(string)
-  description = "Emails of groups to give service account user role."
 }
 
 variable "accelerator_config" {
