@@ -1,0 +1,11 @@
+[Unit]
+Description=Auto Shutdown
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/autoshutdown
+PIDFile=/run/autoshutdown.pid
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
