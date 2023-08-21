@@ -2,14 +2,14 @@
 locals {
   # Format [use_case_name]-[vxpl|vm|cf|sched]-[name]
   # vxpl, vm, cf.. : how the SA is used (vm if attached to a VM instance, sched if attached to a cloud scheduler etc..)
-  sa_account_id_format_spec = "common-%s-%s-%s"
+  sa_account_id_format_spec = "notebook-dev-%s"
 }
 
 # TODO: maybe we should have the account_id as a variable?
 resource "google_service_account" "vertex_notebook_sa" {
   for_each    = var.notebook_name_to_email_map
   project     = var.project_id
-  account_id  = format(local.sa_account_id_format_spec, each.value, "vxnb", "default")
+  account_id  = format(local.sa_account_id_format_spec, split("@", each.value)[0])
   description = "SA used by the user-managed notebook (should not contain any permissions)"
 }
 
