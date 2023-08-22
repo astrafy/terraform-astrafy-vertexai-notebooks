@@ -62,9 +62,6 @@ resource "google_storage_bucket_iam_member" "vertex_nb_scripts_viewer" {
 }
 
 # User-Managed Notebook
-locals {
-  notebook_name = "vert-%s-%s"
-}
 
 resource "google_notebooks_instance" "notebook_instance" {
   for_each = var.notebook_name_to_email_map
@@ -77,8 +74,7 @@ resource "google_notebooks_instance" "notebook_instance" {
     ]
   }
 
-  # Should we use the notebook_name prefix?
-  name         = format(local.notebook_name, each.value, each.key)
+  name         = format(local.sa_account_id_format_spec, each.value)
   location     = var.notebook_location
   machine_type = var.notebook_machine_type
   vm_image {
