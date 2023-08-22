@@ -69,6 +69,8 @@ locals {
 resource "google_notebooks_instance" "notebook_instance" {
   for_each = var.notebook_name_to_email_map
 
+  project = var.project_id
+
   lifecycle {
     ignore_changes = [
       machine_type
