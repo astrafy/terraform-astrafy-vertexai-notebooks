@@ -19,6 +19,7 @@ locals {
 }
 
 resource "google_storage_bucket" "vertex_nb_scripts" {
+  project                     = var.project_id
   name                        = format(local.gcs_name_format_spec, "notebook-scripts")
   location                    = var.default_region
   uniform_bucket_level_access = true
