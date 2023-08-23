@@ -22,6 +22,7 @@ No modules.
 | Name | Type |
 |------|------|
 | [google_notebooks_instance.notebook_instance](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/notebooks_instance) | resource |
+| [google_project_iam_member.sa_user_to_user_managed_notebook](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_iam_member) | resource |
 | [google_service_account.vertex_notebook_sa](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/service_account) | resource |
 | [google_service_account_iam_member.sa_user_to_user_managed_notebook](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/service_account_iam_member) | resource |
 | [google_storage_bucket.vertex_nb_scripts](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/storage_bucket) | resource |

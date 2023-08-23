@@ -127,3 +127,11 @@ resource "google_service_account_iam_member" "sa_user_to_user_managed_notebook" 
   role               = "roles/iam.serviceAccountUser"
   member             = "user:${each.value}"
 }
+
+resource "google_project_iam_member" "sa_user_to_user_managed_notebook" {
+  for_each = var.notebook_name_to_email_map
+  project  = var.project_id
+  role     = "roles/notebooks.admin"
+  member   = "user:${each.value}"
+}
+
